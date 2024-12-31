@@ -1,0 +1,324 @@
+﻿@{
+    ViewData["Title"] = "Flight Search";
+}
+
+<!-- Add Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+    .search-container {
+        background: linear-gradient(135deg, #6e8efb, #4a6cf7);
+        padding: 2rem 0;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+    }
+    
+    .card {
+        border: none;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
+        transition: transform 0.2s;
+    }
+    
+    .card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .input-with-icon {
+        position: relative;
+    }
+    
+    .input-with-icon i {
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #4a6cf7;
+    }
+    
+    .input-with-icon input,
+    .input-with-icon select {
+        padding-left: 35px;
+    }
+    
+    .flight-card {
+        background: #fff;
+        margin: 1rem 0;
+    }
+    
+    .flight-price {
+        font-size: 1.5rem;
+        color: #4a6cf7;
+        font-weight: bold;
+    }
+    
+    .loading {
+        display: none;
+        text-align: center;
+        padding: 2rem;
+    }
+    
+    .btn-primary {
+        background: #4a6cf7;
+        border: none;
+        padding: 0.8rem 2rem;
+        font-weight: 600;
+    }
+    
+    .flight-info {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="search-container">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title text-center mb-4"><i class="fas fa-plane"></i> Flight Search</h2>
+                <form id="flightSearchForm">
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <div class="btn-group w-100" role="group">
+                                <input type="radio" class="btn-check" name="flightType" id="roundTrip" value="round-trip" checked>
+                                <label class="btn btn-outline-primary" for="roundTrip">
+                                    <i class="fas fa-exchange-alt"></i> Round Trip
+                                </label>
+                                <input type="radio" class="btn-check" name="flightType" id="oneWay" value="one-way">
+                                <label class="btn btn-outline-primary" for="oneWay">
+                                    <i class="fas fa-long-arrow-alt-right"></i> One Way
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label><i class="fas fa-plane-departure"></i> From</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <input type="text" class="form-control" id="departureCity" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label><i class="fas fa-plane-arrival"></i> To</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <input type="text" class="form-control" id="arrivalCity" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label><i class="far fa-calendar-alt"></i> Departure Date</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-calendar"></i>
+                                <input type="date" class="form-control" id="departureDate" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label><i class="far fa-calendar-alt"></i> Return Date</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-calendar"></i>
+                                <input type="date" class="form-control" id="returnDate">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label><i class="fas fa-users"></i> Passengers</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-user"></i>
+                                <input type="number" class="form-control" id="passengers" min="1" value="1" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label><i class="fas fa-chair"></i> Class</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-level-up-alt"></i>
+                                <select class="form-control" id="class">
+                                    <option value="ECONOMY">Economy</option>
+                                    <option value="BUSINESS">Business</option>
+                                    <option value="FIRST">First</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search"></i> Search Flights
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="loading" class="loading">
+        <i class="fas fa-spinner fa-spin fa-3x"></i>
+        <p>Searching for the best flights...</p>
+    </div>
+
+    <div id="searchResults" class="mt-4" style="display: none;">
+        <div class="card">
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="input-with-icon">
+                            <i class="fas fa-sort"></i>
+                            <select id="sortOption" class="form-control">
+                                <option value="price">Sort by Price</option>
+                                <option value="duration">Sort by Duration</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="directFlights">
+                            <label class="form-check-label">
+                                <i class="fas fa-direct"></i> Direct flights only
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div id="flightsList"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+        document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('flightSearchForm');
+        const searchResults = document.getElementById('searchResults');
+        const sortOption = document.getElementById('sortOption');
+        const directFlightsCheck = document.getElementById('directFlights');
+        let currentFlights = [];
+    
+        // Hide return date when one-way is selected
+        document.querySelectorAll('input[name="flightType"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const returnDateField = document.getElementById('returnDate');
+                returnDateField.required = this.value === 'round-trip';
+                returnDateField.parentElement.style.display = this.value === 'round-trip' ? 'block' : 'none';
+            });
+        });
+    
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            document.getElementById('loading').style.display = 'block';
+            searchResults.style.display = 'none';
+            
+            const searchData = {
+                departureCity: document.getElementById('departureCity').value,
+                arrivalCity: document.getElementById('arrivalCity').value,
+                departureDate: document.getElementById('departureDate').value,
+                returnDate: document.getElementById('returnDate').value,
+                passengers: document.getElementById('passengers').value,
+                class: document.getElementById('class').value,
+                flightType: document.querySelector('input[name="flightType"]:checked').value
+            };
+    
+            try {
+                const response = await fetch('/Home/SearchFlights', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(searchData)
+                });
+    
+                currentFlights = await response.json();
+                displayFlights(currentFlights);
+                searchResults.style.display = 'block';
+            } catch (error) {
+                console.error('Error:', error);
+            }
+            document.getElementById('loading').style.display = 'none';
+            searchResults.style.display = 'block';
+        });
+    
+        function displayFlights(flights) {
+            const flightsList = document.getElementById('flightsList');
+            flightsList.innerHTML = '';
+            
+            flights.forEach(flight => {
+                const duration = new Date(new Date(flight.arrivalDateTime) - new Date(flight.departureDateTime));
+                const hours = duration.getUTCHours();
+                const minutes = duration.getUTCMinutes();
+                
+                const flightCard = document.createElement('div');
+                flightCard.className = 'card flight-card mb-3';
+                flightCard.innerHTML = `
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-3">
+                                <div class="flight-price">
+                                    <i class="fas fa-tag"></i> $${flight.price}
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="flight-info">
+                                    <i class="fas fa-plane-departure text-primary"></i>
+                                    <div>
+                                        <small>Departure</small>
+                                        <p class="mb-0">${new Date(flight.departureDateTime).toLocaleString()}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="flight-info">
+                                    <i class="fas fa-plane-arrival text-primary"></i>
+                                    <div>
+                                        <small>Arrival</small>
+                                        <p class="mb-0">${new Date(flight.arrivalDateTime).toLocaleString()}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="flight-info">
+                                    <i class="fas fa-clock text-primary"></i>
+                                    <div>
+                                        <small>Duration</small>
+                                        <p class="mb-0">${hours}h ${minutes}m</p>
+                                    </div>
+                                </div>
+                                <div class="flight-info mt-2">
+                                    <i class="fas fa-map-marker-alt text-primary"></i>
+                                    <div>
+                                        <small>Stops</small>
+                                        <p class="mb-0">${flight.numberOfStops === 0 ? 'Direct' : flight.numberOfStops + ' stops'}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                flightsList.appendChild(flightCard);
+            });
+        }
+    
+        sortOption.addEventListener('change', function() {
+            const sortedFlights = [...currentFlights].sort((a, b) => {
+                if (this.value === 'price') {
+                    return parseFloat(a.price) - parseFloat(b.price);
+                } else {
+                    const aDuration = new Date(a.arrivalDateTime) - new Date(a.departureDateTime);
+                    const bDuration = new Date(b.arrivalDateTime) - new Date(b.departureDateTime);
+                    return aDuration - bDuration;
+                }
+            });
+            displayFlights(sortedFlights);
+        });
+    
+        directFlightsCheck.addEventListener('change', function() {
+            const filteredFlights = currentFlights.filter(flight => 
+                !this.checked || flight.numberOfStops === 0
+            );
+            displayFlights(filteredFlights);
+        });
+    });
+</script>
