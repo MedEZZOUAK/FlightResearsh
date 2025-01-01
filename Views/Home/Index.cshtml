@@ -4,6 +4,10 @@
 
 <!-- Add Font Awesome -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src='https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.16.1/lodash.min.js'></script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js'></script>
+<script src='https://unpkg.com/fuse.js@2.5.0/src/fuse.min.js'></script>
+<script src='https://screenfeedcontent.blob.core.windows.net/html/airports.js'></script>
 
 <style>
     .search-container {
@@ -70,6 +74,47 @@
         align-items: center;
         gap: 0.5rem;
     }
+    .autocomplete-wrapper {
+        position: relative;
+    }
+    
+    .autocomplete-results {
+        position: absolute;
+        background: white;
+        z-index: 1000;
+        width: 100%;
+        max-height: 400px;
+        overflow-y: auto;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        border-radius: 4px;
+    }
+    
+    .autocomplete-result {
+        padding: 12px;
+        border-bottom: 1px solid #f3f3f3;
+        cursor: pointer;
+    }
+    
+    .autocomplete-result:hover {
+        background: #f3f3f3;
+    }
+    
+    .autocomplete-location {
+        color: #999;
+        font-size: 13px;
+    }
+    
+    .autocomplete-results[data-highlight='0'] > :nth-child(1) {
+        background: #f3f3f3;
+    }
+    
+    .autocomplete-results[data-highlight='1'] > :nth-child(2) {
+        background: #f3f3f3;
+    }
+    
+    .autocomplete-results[data-highlight='2'] > :nth-child(3) {
+        background: #f3f3f3;
+    }
 </style>
 
 <div class="container mt-4">
@@ -99,14 +144,14 @@
                             <label><i class="fas fa-plane-departure"></i> From</label>
                             <div class="input-with-icon">
                                 <i class="fas fa-map-marker-alt"></i>
-                                <input type="text" class="form-control" id="departureCity" required>
+                                <input type="text" class="form-control" id="departureCity" autocomplete="off" required>
                             </div>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label><i class="fas fa-plane-arrival"></i> To</label>
                             <div class="input-with-icon">
                                 <i class="fas fa-map-marker-alt"></i>
-                                <input type="text" class="form-control" id="arrivalCity" required>
+                                <input type="text" class="form-control" id="arrivalCity" autocomplete="off" required>
                             </div>
                         </div>
                     </div>
@@ -189,10 +234,29 @@
         </div>
     </div>
 </div>
-
-
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        const airlines = {};
+        //get the airlines json 
+        fetch('https://raw.githubusercontent.com/npow/airline-codes/refs/heads/master/airlines.json')
+            .then(response => response.json())
+            .then(data => {
+                // Get the count of airlines
+                const airlinesCount = data.length;
+                // Optional: Log to console for debugging
+                console.log(`Found ${airlinesCount} airlines`);
+
+                data.forEach(airline => {
+                    if (airline.iata) {
+                        airlines[airline.iata] = airline.name;
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching airlines data:', error);
+            });
+        //create a dictionary to store the airlines name and iata if iata is null skip 
+        console.log(airlines);
         const form = document.getElementById('flightSearchForm');
         const searchResults = document.getElementById('searchResults');
         const sortOption = document.getElementById('sortOption');
@@ -272,7 +336,7 @@
                             <i class="fas fa-plane"></i>
                             <div>
                                 <small>Carrier</small>
-                                <p class="mb-0">${flight.carrierCode}</p>
+                                                                <p class="mb-0">${airlines[flight.carrierCode] || flight.carrierCode}</p>
                             </div>
                         </div>
                     </div>
@@ -338,5 +402,130 @@
             );
             displayFlights(filteredFlights);
         });
+        initializeAutocomplete('#departureCity');
+        initializeAutocomplete('#arrivalCity');
+        function initializeAutocomplete(selector) {
+            var options = {
+                shouldSort: true,
+                threshold: 0.4,
+                maxPatternLength: 32,
+                keys: [{
+                    name: 'iata',
+                    weight: 0.5
+                }, {
+                    name: 'name',
+                    weight: 0.3
+                }, {
+                    name: 'city',
+                    weight: 0.2
+                }]
+            };
+
+            var fuse = new Fuse(airports, options);
+            var ac = $(selector);
+            var results = [];
+            var numResults = 0;
+            var selectedIndex = -1;
+
+            // Create wrapper and results list
+            var wrap = $('<div>')
+                .addClass('autocomplete-wrapper')
+                .insertBefore(ac)
+                .append(ac);
+
+            var list = $('<div>')
+                .addClass('autocomplete-results')
+                .appendTo(wrap);
+
+            // Bind events
+            ac.on('click', function (e) {
+                e.stopPropagation();
+            })
+                .on('focus keyup', search)
+                .on('keydown', onKeyDown);
+
+            list.on('click', '.autocomplete-result', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                selectIndex($(this).data('index'));
+            });
+
+            $(document)
+                .on('mouseover', '.autocomplete-result', function (e) {
+                    var index = parseInt($(this).data('index'), 10);
+                    if (!isNaN(index)) {
+                        list.attr('data-highlight', index);
+                    }
+                })
+                .on('click', clearResults);
+
+            function clearResults() {
+                results = [];
+                numResults = 0;
+                list.empty();
+            }
+
+            function selectIndex(index) {
+                if (results.length >= index + 1) {
+                    ac.val(results[index].iata);
+                    clearResults();
+                }
+            }
+
+            function search(e) {
+                if (e.which === 38 || e.which === 13 || e.which === 40) {
+                    return;
+                }
+
+                if (ac.val().length > 0) {
+                    results = _.take(fuse.search(ac.val()), 7);
+                    numResults = results.length;
+
+                    var divs = results.map(function (r, i) {
+                        return '<div class="autocomplete-result" data-index="' + i + '">'
+                            + '<div><b>' + r.iata + '</b> - ' + r.name + '</div>'
+                            + '<div class="autocomplete-location">' + r.city + ', ' + r.country + '</div>'
+                            + '</div>';
+                    });
+
+                    selectedIndex = -1;
+                    list.html(divs.join(''))
+                        .attr('data-highlight', selectedIndex);
+                } else {
+                    numResults = 0;
+                    list.empty();
+                }
+            }
+
+            function onKeyDown(e) {
+                switch (e.which) {
+                    case 38: // up
+                        selectedIndex--;
+                        if (selectedIndex <= -1) {
+                            selectedIndex = -1;
+                        }
+                        list.attr('data-highlight', selectedIndex);
+                        break;
+                    case 13: // enter
+                        selectIndex(selectedIndex);
+                        break;
+                    case 9: // tab
+                        selectIndex(selectedIndex);
+                        e.stopPropagation();
+                        return;
+                    case 40: // down
+                        selectedIndex++;
+                        if (selectedIndex >= numResults) {
+                            selectedIndex = numResults - 1;
+                        }
+                        list.attr('data-highlight', selectedIndex);
+                        break;
+                    default:
+                        return;
+                }
+                e.stopPropagation();
+                e.preventDefault();
+            }
+        }
     });
 </script>
