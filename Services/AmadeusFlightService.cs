@@ -21,20 +21,21 @@ namespace FlightSearchAPI.Services
         /// <summary>
         /// Recherche les vols en fonction des paramètres fournis.
         /// </summary>
-        public async Task<List<FlightResponseDto>> SearchFlightsAsync(string origin, string destination, string departureDate,  Boolean oneWay, string gobackDate,int adults)
+        public async Task<List<FlightResponseDto>> SearchFlightsAsync(string origin, string destination, string departureDate, Boolean oneWay, string gobackDate, int adults)
         {
             // Obtenir le token d'authentification
             var token = await _authService.GetAccessTokenAsync();
 
             // Configurer l'en-tête d'autorisation
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-            var url= $"{_baseUrl}/shopping/flight-offers?" +
+            var url = $"{_baseUrl}/shopping/flight-offers?" +
                         $"originLocationCode={origin}&" +
                         $"destinationLocationCode={destination}&" +
                         $"departureDate={departureDate}&" +
                         $"adults={adults}";
-            if(!oneWay){
-                url =url + $"&returnDate={gobackDate}" ;
+            if (!oneWay)
+            {
+                url = url + $"&returnDate={gobackDate}";
             }
 
             // Effectuer la requête GET
@@ -52,7 +53,8 @@ namespace FlightSearchAPI.Services
                 PropertyNameCaseInsensitive = true
             });
             //check if there is a flight offer
-            if(result.Data.Count == 0){
+            if (result.Data.Count == 0)
+            {
                 Console.WriteLine("No flight offer found");
             }
             var flightOffers = new List<FlightResponseDto>();
@@ -63,6 +65,10 @@ namespace FlightSearchAPI.Services
                     // Extracting the first and last segments (departure and arrival)
                     var departure = itinerary.Segments.FirstOrDefault()?.Departure;
                     var arrival = itinerary.Segments.LastOrDefault()?.Arrival;
+                    var carrierCode = itinerary.Segments.FirstOrDefault()?.CarrierCode ?? "Unknown";
+                    var hasWifi = offer.Services?.HasWifi ?? false;
+                    var hasPowerOutlet = offer.Services?.HasPowerOutlet ?? false;
+                    var hasMealService = offer.Services?.HasMealService ?? false;
 
                     // If the itinerary is valid and has departure and arrival information
                     if (departure != null && arrival != null)
@@ -76,10 +82,13 @@ namespace FlightSearchAPI.Services
                             price,
                             departure.At,
                             arrival.At,
-                            numberOfStops
+                            numberOfStops,
+                            carrierCode,
+                            hasWifi,
+                            hasPowerOutlet,
+                            hasMealService
                         );
-                        Console.WriteLine(dto);
-
+                        
                         flightOffers.Add(dto);
                     }
                 }

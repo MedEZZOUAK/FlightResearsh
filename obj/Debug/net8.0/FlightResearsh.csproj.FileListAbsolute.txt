@@ -31,3 +31,7 @@ C:\Users\ezzou\source\repos\FlightResearsh\obj\Debug\net8.0\refint\FlightResears
 C:\Users\ezzou\source\repos\FlightResearsh\obj\Debug\net8.0\FlightResearsh.pdb
 C:\Users\ezzou\source\repos\FlightResearsh\obj\Debug\net8.0\FlightResearsh.genruntimeconfig.cache
 C:\Users\ezzou\source\repos\FlightResearsh\obj\Debug\net8.0\ref\FlightResearsh.dll
+C:\Users\ezzou\source\repos\FlightResearsh\bin\Debug\net8.0\response.json
+C:\Users\ezzou\source\repos\FlightResearsh\obj\Debug\net8.0\FlightResearsh.sourcelink.json
+C:\Users\ezzou\source\repos\FlightResearsh\bin\Debug\net8.0\Airlines.json
+C:\Users\ezzou\source\repos\FlightResearsh\bin\Debug\net8.0\Airport.json

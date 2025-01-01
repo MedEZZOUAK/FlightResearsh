@@ -20,6 +20,7 @@ public class FlightOffer
     public string Source { get; set; }
     public Price Price { get; set; }
     public List<Itinerary> Itineraries { get; set; }
+    public Services Services { get; set; }
 }
 
 public class Price
@@ -38,6 +39,13 @@ public class Segment
     public Departure Arrival { get; set; }
     public Departure Departure { get; set; }
     public int NumberOfStops { get; set; }
+    public string CarrierCode { get; set; }
+}
+public class SegmentDetail
+{
+    public string At { get; set; }
+    public string IataCode { get; set; }
+    public string Terminal { get; set; }
 }
 
 public class Departure
@@ -45,4 +53,10 @@ public class Departure
     public string IataCode { get; set; }
     public string At { get; set; }
     public string Terminal { get; set; }
+}
+public class Services
+{
+    public bool HasWifi { get; set; }
+    public bool HasPowerOutlet { get; set; }
+    public bool HasMealService { get; set; }
 }
