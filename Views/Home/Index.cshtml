@@ -310,9 +310,12 @@
             flightsList.innerHTML = '';
 
             flights.forEach(flight => {
-                const duration = new Date(new Date(flight.arrivalDateTime) - new Date(flight.departureDateTime));
-                const hours = duration.getUTCHours();
-                const minutes = duration.getUTCMinutes();
+                const arrivalTime = new Date(flight.arrivalDateTime);
+                const departureTime = new Date(flight.departureDateTime);
+                const durationMs = arrivalTime - departureTime;
+                
+                const hours = Math.floor(durationMs / (1000 * 60 * 60));
+                const minutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60));
 
                 const flightCard = document.createElement('div');
                 flightCard.className = 'card flight-card mb-3';
