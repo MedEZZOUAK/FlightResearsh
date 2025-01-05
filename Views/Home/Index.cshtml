@@ -148,16 +148,18 @@
     .banner .oneTragectory{
         margin-bottom:10px;
         display:flex;
-        justify:space-between;
+        justify:space-around;
         align-items:center;
         border:solid 1px gray;
         width:90%;
         margin-left:5%;
         border-radius:10px;
         padding:5px;
+        background-color:lightgray;
+        padding:10px;
     }
     .banner .oneTragectory .positions{
-        flex: 0 0 50%;
+        flex: 0 0 45%;
         display:flex;
         align-items:center;
         justify-content:space-around;
@@ -167,7 +169,7 @@
     }
     .banner .oneTragectory .times {
         text-align:center;
-        flex:0 0 50%;
+        flex:0 0 45%;
     }
     #eye{
         padding:10px;
@@ -181,11 +183,11 @@
 <div class="container mt-4" style="position:relative">
     <div class="banner" id="banner">
         <div class="header">
-            <h1>Details</h1>
+            <h1><i class="fa fa-info-circle" style="padding-right:15px" aria-hidden="true"></i>Details</h1>
         </div>
         <div class="Tragectories" id="tragects">
             <h2>Trajectory : </h2>
-            <div id="tragectoryContainer">
+            <div style="max-height:55vh;overflow:scroll"  id="tragectoryContainer">
 
             </div>
         </div>
@@ -287,7 +289,7 @@
     <div id="searchResults" class="mt-4" style="display: none;">
         <div class="card">
             <div class="card-body">
-                <div class="row mb-3">
+                <div class="row mb-3" style="align-items:center">
                     <div class="col-md-6">
                         <div class="input-with-icon">
                             <i class="fas fa-sort"></i>
