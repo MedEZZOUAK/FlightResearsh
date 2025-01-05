@@ -1,0 +1,205 @@
+@{
+    ViewData["Title"] = "Airport Codes Reference";
+}
+
+<div class="container mt-4">
+    <h1 class="text-primary mb-4">
+        <i class="fas fa-plane-departure"></i> Airport Codes Reference
+    </h1>
+
+    <!-- Search Bar -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                <input type="text" id="airportSearch" class="form-control" placeholder="Search airports...">
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Reference -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header">
+            <h3><i class="fas fa-star"></i> Popular Airports</h3>
+        </div>
+        <div class="card-body">
+            <div class="row" id="popularAirports">
+                <!-- Will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- All Airports -->
+    <div class="card shadow-sm">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h3><i class="fas fa-list"></i> All Airports</h3>
+                <div class="btn-group">
+                    <button class="btn btn-outline-primary" id="showAll">All</button>
+                    <button class="btn btn-outline-primary" id="showEurope">Europe</button>
+                    <button class="btn btn-outline-primary" id="showAmericas">Americas</button>
+                    <button class="btn btn-outline-primary" id="showAsia">Asia</button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div id="airportsList" class="row">
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .airport-card {
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .airport-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .copy-tooltip {
+        position: absolute;
+        background: #333;
+        color: white;
+        padding: 5px;
+        border-radius: 3px;
+        font-size: 12px;
+        display: none;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Popular airports data
+            const popularAirports = {
+                "AMS": { "iata": "AMS", "name": "Amsterdam Airport Schiphol", "city": "Amsterdam", "country": "NL" },
+                "CDG": { "iata": "CDG", "name": "Charles de Gaulle", "city": "Paris", "country": "FR" },
+                "DXB": { "iata": "DXB", "name": "Dubai International", "city": "Dubai", "country": "AE" },
+                "FRA": { "iata": "FRA", "name": "Frankfurt Airport", "city": "Frankfurt", "country": "DE" },
+                "HKG": { "iata": "HKG", "name": "Hong Kong International", "city": "Hong Kong", "country": "HK" },
+                "JFK": { "iata": "JFK", "name": "John F Kennedy International", "city": "New York", "country": "US" },
+                "LAX": { "iata": "LAX", "name": "Los Angeles International", "city": "Los Angeles", "country": "US" },
+                "LHR": { "iata": "LHR", "name": "Heathrow", "city": "London", "country": "GB" },
+                "SIN": { "iata": "SIN", "name": "Singapore Changi", "city": "Singapore", "country": "SG" },
+                "SYD": { "iata": "SYD", "name": "Sydney Airport", "city": "Sydney", "country": "AU" }
+            };
+
+            const airportsList = document.getElementById('airportsList');
+            const popularContainer = document.getElementById('popularAirports');
+            const searchInput = document.getElementById('airportSearch');
+
+            // Populate popular airports
+            Object.entries(popularAirports).forEach(([code, airport]) => {
+                const col = document.createElement('div');
+                col.className = 'col-md-4 mb-3';
+                col.innerHTML = createAirportCard(airport);
+                popularContainer.appendChild(col);
+            });
+
+            // Show initial loading state
+            airportsList.innerHTML = '<div class="col-12 text-center"><div class="spinner-border text-primary" role="status"></div></div>';
+
+            // Fetch and display all airports
+            fetch('https://raw.githubusercontent.com/mwgg/Airports/master/airports.json')
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.json();
+                })
+                .then(airports => {
+                    airportsList.innerHTML = '';
+                    displayAirports(airports);
+                    setupSearch(airports);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    airportsList.innerHTML = '<div class="col-12 text-center text-danger">Error loading airports data</div>';
+                });
+
+            // Helper functions
+            function createAirportCard(airport) {
+                return `
+                    <div class="airport-card card h-100" data-region="${getRegion(airport.country)}">
+                        <div class="card-body">
+                            <h5 class="card-title">${airport.iata}</h5>
+                            <p class="card-text">${airport.name}</p>
+                            <small class="text-muted">${airport.city}, ${airport.country}</small>
+                        </div>
+                    </div>`;
+            }
+
+            function displayAirports(airports) {
+                Object.entries(airports).forEach(([code, airport]) => {
+                    if (airport.iata) {
+                        const col = document.createElement('div');
+                        col.className = 'col-md-3 mb-3';
+                        col.innerHTML = createAirportCard(airport);
+                        airportsList.appendChild(col);
+                    }
+                });
+            }
+
+            function getRegion(countryCode) {
+                const europeCountries = ['GB', 'FR', 'DE', 'ES', 'IT', 'NL', 'BE', 'CH', 'AT', 'SE', 'NO', 'DK', 'FI', 'PL'];
+                const americasCountries = ['US', 'CA', 'MX', 'BR', 'AR', 'CO', 'CL'];
+                const asiaCountries = ['CN', 'JP', 'KR', 'IN', 'SG', 'TH', 'MY', 'ID', 'AE'];
+                
+                if (europeCountries.includes(countryCode)) return 'Europe';
+                if (americasCountries.includes(countryCode)) return 'Americas';
+                if (asiaCountries.includes(countryCode)) return 'Asia';
+                return 'Other';
+            }
+
+            function setupSearch(airports) {
+                searchInput.addEventListener('input', (e) => {
+                    const searchTerm = e.target.value.toLowerCase();
+                    const cards = document.querySelectorAll('.airport-card');
+                    
+                    cards.forEach(card => {
+                        const title = card.querySelector('.card-title').textContent.toLowerCase();
+                        const text = card.querySelector('.card-text').textContent.toLowerCase();
+                        const visible = title.includes(searchTerm) || text.includes(searchTerm);
+                        card.closest('.col-md-3, .col-md-4').style.display = visible ? '' : 'none';
+                    });
+                });
+            }
+
+            // Region filtering
+            document.getElementById('showAll').addEventListener('click', () => filterByRegion('all'));
+            document.getElementById('showEurope').addEventListener('click', () => filterByRegion('Europe'));
+            document.getElementById('showAmericas').addEventListener('click', () => filterByRegion('Americas'));
+            document.getElementById('showAsia').addEventListener('click', () => filterByRegion('Asia'));
+
+            function filterByRegion(region) {
+                const cards = document.querySelectorAll('.airport-card');
+                cards.forEach(card => {
+                    const show = region === 'all' || card.dataset.region === region;
+                    card.closest('.col-md-3, .col-md-4').style.display = show ? '' : 'none';
+                });
+            }
+
+            // Click to copy functionality
+            document.addEventListener('click', function(e) {
+                const card = e.target.closest('.airport-card');
+                if (card) {
+                    const code = card.querySelector('.card-title').textContent;
+                    navigator.clipboard.writeText(code)
+                        .then(() => showTooltip(card))
+                        .catch(err => console.error('Copy failed:', err));
+                }
+            });
+
+            function showTooltip(element) {
+                const tooltip = document.createElement('div');
+                tooltip.className = 'copy-tooltip';
+                tooltip.textContent = 'Copied!';
+                element.appendChild(tooltip);
+                tooltip.style.display = 'block';
+                setTimeout(() => tooltip.remove(), 1000);
+            }
+        });
+    </script>
+}
