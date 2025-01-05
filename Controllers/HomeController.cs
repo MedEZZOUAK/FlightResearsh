@@ -32,6 +32,7 @@ namespace FlightResearsh.Controllers
           request.ReturnDate,
           request.Passengers
       );
+      Console.WriteLine(Json(flights));
       return Json(flights);
     }
 

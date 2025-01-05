@@ -60,6 +60,7 @@ namespace FlightSearchAPI.Services
             var flightOffers = new List<FlightResponseDto>();
             foreach (var offer in result.Data)
             {
+                var SegmentsList= new List<SegmentsDTO>();
                 foreach (var itinerary in offer.Itineraries)
                 {
                     // Extracting the first and last segments (departure and arrival)
@@ -69,14 +70,26 @@ namespace FlightSearchAPI.Services
                     var hasWifi = offer.Services?.HasWifi ?? false;
                     var hasPowerOutlet = offer.Services?.HasPowerOutlet ?? false;
                     var hasMealService = offer.Services?.HasMealService ?? false;
-
+                    foreach(var segment in itinerary.Segments){
+                        var DepartureSegment = segment.Departure.IataCode;
+                        var DepartureDate = segment.Departure.At;
+                        var ArrivalSegment = segment.Arrival.IataCode;
+                        var ArrivalDate = segment.Arrival.At;
+                        var dto= new SegmentsDTO(
+                            DepartureDate,
+                            ArrivalDate,
+                            DepartureSegment,
+                            ArrivalSegment
+                        );
+                        SegmentsList.Add(dto);
+                    }
                     // If the itinerary is valid and has departure and arrival information
                     if (departure != null && arrival != null)
                     {
                         var price = offer.Price.GrandTotal;
                         var source = offer.Source;
-                        var numberOfStops = itinerary.Segments.Count(segment => segment.NumberOfStops > 0);
-
+                        var numberOfStops = itinerary.Segments.Count();
+                        numberOfStops=numberOfStops-1;
                         var dto = new FlightResponseDto(
                             source,
                             price,
@@ -86,7 +99,8 @@ namespace FlightSearchAPI.Services
                             carrierCode,
                             hasWifi,
                             hasPowerOutlet,
-                            hasMealService
+                            hasMealService,
+                            SegmentsList
                         );
                         
                         flightOffers.Add(dto);

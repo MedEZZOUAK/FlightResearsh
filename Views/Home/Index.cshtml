@@ -115,9 +115,86 @@
     .autocomplete-results[data-highlight='2'] > :nth-child(3) {
         background: #f3f3f3;
     }
+    .banner{
+        display:none;
+        position:fixed;
+        z-index:3;
+        top:50%;
+        width:50%;
+        left:50%;
+        transform: translate(-50%, -50%);
+        background-color:white;
+        border:solid 1px black;
+        border-radius:25px;
+        padding:10px;
+    }
+    .banner .header{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+    }
+    .banner .header h1{
+        text-align:center;
+        padding-top:15px;
+        width:100%;
+        color:#4a6cf7;
+    }
+    .banner h2{
+        text-align:center;
+        padding-top:15px;
+        width:100%;
+        margin-bottom:20px;
+    }
+    .banner .oneTragectory{
+        margin-bottom:10px;
+        display:flex;
+        justify:space-between;
+        align-items:center;
+        border:solid 1px gray;
+        width:90%;
+        margin-left:5%;
+        border-radius:10px;
+        padding:5px;
+    }
+    .banner .oneTragectory .positions{
+        flex: 0 0 50%;
+        display:flex;
+        align-items:center;
+        justify-content:space-around;
+    }
+    .banner .oneTragectory .positions p{
+        flex: 0 0 30%;
+    }
+    .banner .oneTragectory .times {
+        text-align:center;
+        flex:0 0 50%;
+    }
+    #eye{
+        padding:10px;
+        border-radius:5px;
+        background-color:#4a6cf7;
+        color:white;
+        width:fit-content;
+    }
 </style>
 
-<div class="container mt-4">
+<div class="container mt-4" style="position:relative">
+    <div class="banner" id="banner">
+        <div class="header">
+            <h1>Details</h1>
+        </div>
+        <div class="Tragectories" id="tragects">
+            <h2>Trajectory : </h2>
+            <div id="tragectoryContainer">
+
+            </div>
+        </div>
+        <div class="btnContainer" style="float:right;margin-left:5%;margin-top:15px">
+            <button class="btn btn-primary w-90 ml-5" onclick="closeBanner()">
+                Close
+            </button>
+        </div>
+    </div>
     <div class="search-container">
         <div class="card">
             <div class="card-body">
@@ -296,6 +373,8 @@
                 });
 
                 currentFlights = await response.json();
+                console.log(currentFlights);
+                
                 displayFlights(currentFlights);
                 searchResults.style.display = 'block';
             } catch (error) {
@@ -304,6 +383,50 @@
             document.getElementById('loading').style.display = 'none';
             searchResults.style.display = 'block';
         });
+        window.closeBanner=function(){
+            document.getElementById("banner").style.display = "none";
+        }
+        window.showBanner=function(segments){
+           if (typeof segments === 'string') {
+                segments = JSON.parse(segments);
+            }
+
+            let content = ""; 
+
+            segments.forEach(segment => {
+                if (typeof segment === 'string') {
+                    segment = JSON.parse(segment);
+                }
+                function formatDate(dateString) {
+                    const d = new Date(dateString);
+                    const day = String(d.getDate()).padStart(2, '0');  // Ensure two digits
+                    const month = String(d.getMonth() + 1).padStart(2, '0');  // Month is 0-indexed, so add 1
+                    const year = d.getFullYear();
+                    const hours = String(d.getHours()).padStart(2, '0');
+                    const minutes = String(d.getMinutes()).padStart(2, '0');
+                    return `${day}/${month}/${year} ${hours}:${minutes}`;
+                }
+                console.log(segment.departureDate);
+                
+                const departureTime = formatDate(segment.departureDate);
+                const arrivalTime = formatDate(segment.arrivalDate);
+                content += `
+                    <div class='oneTragectory'>
+                        <div class='positions'>
+                            <p><i class="fas fa-plane-departure text-primary"></i> ${segment.departureSegment}</p>
+                            <p><i class="fa fa-arrow-right" text-primary" aria-hidden="true"></i></p>
+                            <p><i class="fas fa-plane-arrival text-primary"></i> ${segment.arrivalSegment}</p>
+                        </div>
+                        <div class='times'>
+                            <p ><i class="fas fa-clock text-primary"></i> <span style="font-weight:bold">Departure:</span> <br/>${departureTime}</p>
+                            <p ><i class="fas fa-clock text-primary"></i> <span style="font-weight:bold">Arrival:</span> <br/>${arrivalTime}</p>
+                        </div>
+                    </div>`;
+            });
+
+            document.getElementById('tragectoryContainer').innerHTML = content;
+            document.getElementById("banner").style.display = "block";
+        }
 
         function displayFlights(flights) {
             const flightsList = document.getElementById('flightsList');
@@ -331,14 +454,14 @@
                         <div class="flight-info">
                             <i class="fas fa-plane-departure text-primary"></i>
                             <div>
-                                <small>Departure</small>
+                                <small style="font-weight:bold">Departure</small>
                                 <p class="mb-0">${new Date(flight.departureDateTime).toLocaleString()}</p>
                             </div>
                         </div>
                         <div class="flight-info mt-2">
                             <i class="fas fa-plane"></i>
                             <div>
-                                <small>Carrier</small>
+                                <small style="font-weight:bold">Carrier</small>
                                                                 <p class="mb-0">${airlines[flight.carrierCode] || flight.carrierCode}</p>
                             </div>
                         </div>
@@ -347,14 +470,14 @@
                         <div class="flight-info">
                             <i class="fas fa-plane-arrival text-primary"></i>
                             <div>
-                                <small>Arrival</small>
+                                <small style="font-weight:bold">Arrival</small>
                                 <p class="mb-0">${new Date(flight.arrivalDateTime).toLocaleString()}</p>
                             </div>
                         </div>
                         <div class="flight-info mt-2">
                             <i class="fas fa-clock text-primary"></i>
                             <div>
-                                <small>Duration</small>
+                                <small style="font-weight:bold">Duration</small>
                                 <p class="mb-0">${hours}h ${minutes}m</p>
                             </div>
                         </div>
@@ -363,20 +486,12 @@
                         <div class="flight-info">
                             <i class="fas fa-map-marker-alt text-primary"></i>
                             <div>
-                                <small>Stops</small>
+                                <small style="font-weight:bold">Stops</small>
                                 <p class="mb-0">${flight.numberOfStops === 0 ? 'Direct' : flight.numberOfStops + ' stops'}</p>
                             </div>
                         </div>
-                        <div class="amenities mt-2">
-                            <small>Amenities:</small>
-                            <div class="d-flex gap-2 mt-1">
-                                <i class="fas fa-wifi ${flight.hasWifi ? 'text-success' : 'text-muted'}" 
-                                   title="WiFi ${flight.hasWifi ? 'Available' : 'Not Available'}"></i>
-                                <i class="fas fa-plug ${flight.hasPowerOutlet ? 'text-success' : 'text-muted'}"
-                                   title="Power Outlet ${flight.hasPowerOutlet ? 'Available' : 'Not Available'}"></i>
-                                <i class="fas fa-utensils ${flight.hasMealService ? 'text-success' : 'text-muted'}"
-                                   title="Meal Service ${flight.hasMealService ? 'Available' : 'Not Available'}"></i>
-                            </div>
+                        <div class="amenities mt-2"  id="eye" onclick='showBanner(${JSON.stringify(flight.segments)})'>
+                            <i class="fa fa-eye" aria-hidden="true"></i>
                         </div>
                     </div>
                 </div>
@@ -385,7 +500,7 @@
                 flightsList.appendChild(flightCard);
             });
         }
-
+        
         sortOption.addEventListener('change', function () {
             const sortedFlights = [...currentFlights].sort((a, b) => {
                 if (this.value === 'price') {

@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using FlightSearchAPI.DTOs;
 
 public class FlightResponseDto
 {
@@ -11,6 +12,7 @@ public class FlightResponseDto
     public bool HasWifi { get; set; }
     public bool HasPowerOutlet { get; set; }
     public bool HasMealService { get; set; }
+    public List<SegmentsDTO> Segments {get ; set;}
 
     public FlightResponseDto(
         string source, 
@@ -21,7 +23,8 @@ public class FlightResponseDto
         string carrierCode,
         bool hasWifi,
         bool hasPowerOutlet,
-        bool hasMealService)
+        bool hasMealService,
+        List<SegmentsDTO> segments)
     {
         Source = source;
         Price = price;
@@ -32,5 +35,6 @@ public class FlightResponseDto
         HasWifi = hasWifi;
         HasPowerOutlet = hasPowerOutlet;
         HasMealService = hasMealService;
+        Segments=segments;
     }
 }
